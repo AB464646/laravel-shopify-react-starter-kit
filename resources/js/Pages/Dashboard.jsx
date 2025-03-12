@@ -35,41 +35,99 @@ export default function Dashboard() {
     const [selectedQuery, setSelectedQuery] = useState('');
 
     const handleProductQueryChange = (value) => {
-
-        setSelectedProductQuery(value)
-        setFetchedProducts()
+        setSelectedProductQuery(value);
+        setFetchedProducts();
         setHideProductId(true);
         setProductId();
         setHideProductHandle(true);
         setProductHandle();
-        if (value === 'all') {
+        if (value === "all") {
             setDisabled(true);
             const promise = new Promise((resolve, reject) => {
                 setTimeout(async () => {
-                    await fetch(route('get.products'), {
-                        method: 'GET',
-                    }).then(async (response) => {
-                        var results = await response.json()
+                    await fetch(route("product.get"), {
+                        method: "GET",
+                    })
+                        .then(async (response) => {
+                            var results = await response.json();
+                            if (results.success) {
+                                setFetchedProducts(results.data);
+                                resolve(results.message);
+                            } else {
+                                reject(results.message);
+                            }
+                        })
+                        .catch(reject);
+                }, 2000);
+            });
+            toast
+                .promise(
+                    promise,
+                    {
+                        loading: "Fetching Products.......",
+                        success: (data) => `${data} Successfully`,
+                        error: (err) =>
+                            `This just happened because: ${err.toString()}`,
+                    },
+                    {
+                        style: {
+                            minWidth: "250px",
+                        },
+                        success: {
+                            duration: 5000,
+                        },
+                        error: {
+                            duration: 5000,
+                        },
+                    }
+                )
+                .then(() => {
+                    setDisabled(false);
+                })
+                .catch((error) => {
+                    setDisabled(false);
+                    console.error("An error occurred:", error);
+                });
+        }
+        if (value === "by_id") {
+            setHideProductId(false);
+        }
+        if (value === "by_handle") {
+            setHideProductHandle(false);
+        }
+    };
+
+    const handleFetchProductById = () => {
+        setDisabled(true);
+        const promise = new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                await fetch(route("get.product", { id: productId }), {
+                    method: "GET",
+                })
+                    .then(async (response) => {
+                        var results = await response.json();
                         if (results.success) {
                             setFetchedProducts(results.data);
                             resolve(results.message);
-                        }
-                        else {
+                        } else {
                             reject(results.message);
                         }
-                    }).catch(reject);
-                }, 2000);
-            });
-            toast.promise(
+                    })
+                    .catch(reject);
+            }, 2000);
+        });
+        toast
+            .promise(
                 promise,
                 {
-                    loading: 'Fetching Products.......',
+                    loading: "Fetching Product.......",
                     success: (data) => `${data} Successfully`,
-                    error: (err) => `This just happened because: ${err.toString()}`,
+                    error: (err) =>
+                        `This just happened because: ${err.toString()}`,
                 },
                 {
                     style: {
-                        minWidth: '250px',
+                        minWidth: "250px",
                     },
                     success: {
                         duration: 5000,
@@ -78,113 +136,67 @@ export default function Dashboard() {
                         duration: 5000,
                     },
                 }
-            ).then(() => {
-                setDisabled(false)
-            }).catch((error) => {
-                setDisabled(false)
+            )
+            .then(() => {
+                setDisabled(false);
+            })
+            .catch((error) => {
+                setDisabled(false);
                 console.error("An error occurred:", error);
             });
-        }
-        if (value === 'by_id') {
-            setHideProductId(false);
-        }
-        if (value === 'by_handle') {
-            setHideProductHandle(false);
-        }
-
-    }
-
-    const handleFetchProductById = () => {
-
-        setDisabled(true);
-        const promise = new Promise((resolve, reject) => {
-            setTimeout(async () => {
-                await fetch(route('get.product', { 'id': productId }), {
-                    method: 'GET',
-                }).then(async (response) => {
-                    var results = await response.json()
-                    if (results.success) {
-                        setFetchedProducts(results.data);
-                        resolve(results.message);
-                    }
-                    else {
-                        reject(results.message);
-                    }
-                }).catch(reject);
-            }, 2000);
-        });
-        toast.promise(
-            promise,
-            {
-                loading: 'Fetching Product.......',
-                success: (data) => `${data} Successfully`,
-                error: (err) => `This just happened because: ${err.toString()}`,
-            },
-            {
-                style: {
-                    minWidth: '250px',
-                },
-                success: {
-                    duration: 5000,
-                },
-                error: {
-                    duration: 5000,
-                },
-            }
-        ).then(() => {
-            setDisabled(false)
-        }).catch((error) => {
-            setDisabled(false)
-            console.error("An error occurred:", error);
-        });
-
-    }
+    };
 
     const handleFetchProductByHandle = () => {
-
         setDisabled(true);
         const promise = new Promise((resolve, reject) => {
             setTimeout(async () => {
-                await fetch(route('get.product.handle', { 'handle': productHandle }), {
-                    method: 'GET',
-                }).then(async (response) => {
-                    var results = await response.json()
-                    if (results.success) {
-                        setFetchedProducts(results.data);
-                        resolve(results.message);
+                await fetch(
+                    route("get.product.handle", { handle: productHandle }),
+                    {
+                        method: "GET",
                     }
-                    else {
-                        reject(results.message);
-                    }
-                }).catch(reject);
+                )
+                    .then(async (response) => {
+                        var results = await response.json();
+                        if (results.success) {
+                            setFetchedProducts(results.data);
+                            resolve(results.message);
+                        } else {
+                            reject(results.message);
+                        }
+                    })
+                    .catch(reject);
             }, 2000);
         });
-        toast.promise(
-            promise,
-            {
-                loading: 'Fetching Product.......',
-                success: (data) => `${data} Successfully`,
-                error: (err) => `This just happened because: ${err.toString()}`,
-            },
-            {
-                style: {
-                    minWidth: '250px',
+        toast
+            .promise(
+                promise,
+                {
+                    loading: "Fetching Product.......",
+                    success: (data) => `${data} Successfully`,
+                    error: (err) =>
+                        `This just happened because: ${err.toString()}`,
                 },
-                success: {
-                    duration: 5000,
-                },
-                error: {
-                    duration: 5000,
-                },
-            }
-        ).then(() => {
-            setDisabled(false)
-        }).catch((error) => {
-            setDisabled(false)
-            console.error("An error occurred:", error);
-        });
-
-    }
+                {
+                    style: {
+                        minWidth: "250px",
+                    },
+                    success: {
+                        duration: 5000,
+                    },
+                    error: {
+                        duration: 5000,
+                    },
+                }
+            )
+            .then(() => {
+                setDisabled(false);
+            })
+            .catch((error) => {
+                setDisabled(false);
+                console.error("An error occurred:", error);
+            });
+    };
 
     return (
         <AuthenticatedLayout
@@ -209,91 +221,110 @@ export default function Dashboard() {
                             options={Queries}
                             onChange={setSelectedQuery}
                             value={selectedQuery}
-                            placeholder='Select a Query'
+                            placeholder="Select a Query"
                         />
                     </Card>
-                    {
-                        selectedQuery === 'products' ?
-                            <Card>
-                                <h3 className="text-lg font-medium leading-6 text-gray-900 my-4">
-                                    Products
-                                </h3>
-                                <Grid>
-                                    <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                        <Card title="Sales" sectioned>
-                                            <Select
-                                                label="Product Queries"
-                                                options={productQueries}
-                                                onChange={handleProductQueryChange}
-                                                value={selectedProductQuery}
-                                                placeholder='Select a product query'
+                    {selectedQuery === "products" ? (
+                        <Card>
+                            <h3 className="text-lg font-medium leading-6 text-gray-900 my-4">
+                                Products
+                            </h3>
+                            <Grid>
+                                <Grid.Cell
+                                    columnSpan={{
+                                        xs: 6,
+                                        sm: 6,
+                                        md: 6,
+                                        lg: 6,
+                                        xl: 6,
+                                    }}
+                                >
+                                    <Card title="Sales" sectioned>
+                                        <Select
+                                            label="Product Queries"
+                                            options={productQueries}
+                                            onChange={handleProductQueryChange}
+                                            value={selectedProductQuery}
+                                            placeholder="Select a product query"
+                                            disabled={disabled}
+                                        />
+                                    </Card>
+                                    {!hideProductId && (
+                                        <Card>
+                                            <TextField
+                                                label="Product ID"
+                                                type="number"
+                                                placeholder="Enter Product ID"
                                                 disabled={disabled}
+                                                value={productId}
+                                                onChange={setProductId}
                                             />
+                                            <Button
+                                                primary
+                                                loading={disabled}
+                                                onClick={handleFetchProductById}
+                                            >
+                                                Submit
+                                            </Button>
                                         </Card>
-                                        {
-                                            !hideProductId &&
-                                            <Card>
-                                                <TextField
-                                                    label="Product ID"
-                                                    type="number"
-                                                    placeholder="Enter Product ID"
-                                                    disabled={disabled}
-                                                    value={productId}
-                                                    onChange={setProductId}
-                                                />
-                                                <Button
-                                                    primary
-                                                    loading={disabled}
-                                                    onClick={handleFetchProductById}
-                                                >Submit</Button>
-                                            </Card>
-                                        }
-                                        {
-                                            !hideProductHandle &&
-                                            <Card>
-                                                <TextField
-                                                    label="Product Handle"
-                                                    type="text"
-                                                    placeholder="Enter Product Handle"
-                                                    disabled={disabled}
-                                                    value={productHandle}
-                                                    onChange={setProductHandle}
-                                                />
-                                                <Button
-                                                    primary
-                                                    loading={disabled}
-                                                    onClick={handleFetchProductByHandle}
-                                                >Submit</Button>
-                                            </Card>
-                                        }
-                                    </Grid.Cell>
-                                    <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 6, lg: 6, xl: 6 }}>
-                                        <Card title="Orders" sectioned>
-                                            {
-                                                fetchedProducts ?
-                                                    <MonacoEditor
-                                                        height="500px"
-                                                        defaultLanguage="json"
-                                                        theme="vs-dark"
-                                                        defaultValue={JSON.stringify(fetchedProducts, null, 2)}
-                                                    />
-                                                    :
-                                                    'Nothing to Show'
-                                            }
+                                    )}
+                                    {!hideProductHandle && (
+                                        <Card>
+                                            <TextField
+                                                label="Product Handle"
+                                                type="text"
+                                                placeholder="Enter Product Handle"
+                                                disabled={disabled}
+                                                value={productHandle}
+                                                onChange={setProductHandle}
+                                            />
+                                            <Button
+                                                primary
+                                                loading={disabled}
+                                                onClick={
+                                                    handleFetchProductByHandle
+                                                }
+                                            >
+                                                Submit
+                                            </Button>
                                         </Card>
-                                    </Grid.Cell>
-                                </Grid>
-                            </Card>
-                            :
-                            selectedQuery === "variants" ?
-                                <Card>
-                                    <h3 className="text-lg font-medium leading-6 text-gray-900 my-4">
-                                        Variants
-                                    </h3>
-                                </Card>
-                                :
-                                null
-                    }
+                                    )}
+                                </Grid.Cell>
+                                <Grid.Cell
+                                    columnSpan={{
+                                        xs: 6,
+                                        sm: 6,
+                                        md: 6,
+                                        lg: 6,
+                                        xl: 6,
+                                    }}
+                                >
+                                    <Card title="Orders" sectioned>
+                                        {fetchedProducts ? (
+                                            <MonacoEditor
+                                                height="500px"
+                                                defaultLanguage="json"
+                                                theme="vs-dark"
+                                                defaultValue={JSON.stringify(
+                                                    fetchedProducts,
+                                                    null,
+                                                    2
+                                                )}
+                                            />
+                                        ) : (
+                                            "Nothing to Show"
+                                        )}
+                                    </Card>
+                                </Grid.Cell>
+                            </Grid>
+                        </Card>
+                    ) : selectedQuery === "variants" ? (
+                        <Card>
+                            <h3 className="text-lg font-medium leading-6 text-gray-900 my-4">
+                                Variants
+                            </h3>
+                        </Card>
+                    ) : null}
                 </div>
             </div>
         </AuthenticatedLayout>

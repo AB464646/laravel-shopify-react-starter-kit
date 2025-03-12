@@ -1,4 +1,5 @@
-<?php namespace App\Jobs;
+<?php
+namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -8,7 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Osiset\ShopifyApp\Objects\Values\ShopDomain;
 use stdClass;
 
-class OrdersUpdateJob implements ShouldQueue
+class OrdersUpdatedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

@@ -1,5 +1,11 @@
-<?php namespace App\Jobs;
+<?php
+namespace App\Jobs;
 
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\OrderLineItem;
+use App\Models\OrderShippingAddress;
+use DB;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -36,7 +42,7 @@ class OrdersCreateJob implements ShouldQueue
      */
     public function __construct($shopDomain, $data)
     {
-        $this->shopDomain = $shopDomain;
+        $this->shopDomain = ShopDomain::fromNative($shopDomain);
         $this->data = $data;
     }
 
@@ -48,9 +54,70 @@ class OrdersCreateJob implements ShouldQueue
     public function handle()
     {
         // Convert domain
-        $this->shopDomain = ShopDomain::fromNative($this->shopDomain);
+        $domain = $this->shopDomain->toNative();
+        $payload = $this->data;
 
-        // Do what you wish with the data
-        // Access domain name as $this->shopDomain->toNative()
+        DB::beginTransaction();
+
+
+        // Process customer
+        $customer = $payload->customer;
+        $shopifyCustomer = Customer::updateOrCreate(
+            [
+                'shopify_customer_id' => $customer->id,
+            ],
+            [
+                'email' => $customer->email,
+                'first_name' => $customer->first_name,
+                'last_name' => $customer->last_name,
+                'phone' => $customer->phone,
+            ]
+        );
+
+
+        $shopifyOrder = Order::create([
+            'shopify_order_id' => $payload->id,
+            'shopify_customer_id' => $shopifyCustomer->id,
+            'order_number' => $payload->order_number,
+            'financial_status' => $payload->financial_status,
+            'fulfillment_status' => $payload->fulfillment_status,
+        ]);
+
+        // Save shipping address separately
+        $shippingAddress = $payload->shipping_address;
+        OrderShippingAddress::create([
+            "first_name" => $shippingAddress->first_name,
+            "last_name" => $shippingAddress->last_name,
+            "address1" => $shippingAddress->address1,
+            "address2" => $shippingAddress->address2,
+            "city" => $shippingAddress->city,
+            "country" => $shippingAddress->country,
+            "province" => $shippingAddress->province,
+            "phone" => $shippingAddress->phone,
+            'shopify_order_id' => $shopifyOrder->id,
+        ]);
+
+        // Process order line items
+        foreach ($payload->line_items as $lineItem) {
+            OrderLineItem::create([
+                'order_id' => $shopifyOrder->id,
+                'shopify_line_item_id' => $lineItem->id,
+                'title' => $lineItem->title,
+                'quantity' => $lineItem->quantity,
+                'price' => $lineItem->price,
+                'variant_id' => $lineItem->variant_id,
+
+            ]);
+        }
+
+        DB::commit();
+
+
+
+        \Log::info('Webhook processed successfully', [
+            'shop_domain' => $domain,
+            'payload' => $payload,
+        ]);
     }
+
 }
